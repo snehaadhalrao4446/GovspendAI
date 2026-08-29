@@ -9,6 +9,7 @@ import { z } from 'zod';
 const PORT = Number(process.env.PORT || 8787);
 const JWT_SECRET = process.env.JWT_SECRET || 'local-demo-secret-change-before-production';
 const ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';
+const DEMO_CREDENTIALS = Object.freeze({ departmentId: 'PWD-MH-204', officerId: 'AUD-ASH-204', password: 'GovSpend@2026' });
 const POLICY_WEIGHTS = Object.freeze({
   price_deviation: 0.30,
   vendor_graph_risk: 0.20,
@@ -82,6 +83,7 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'govspen
 app.post('/api/auth/login', (req, res) => {
   const input = z.object({ departmentId: z.string().min(3), officerId: z.string().min(3), password: z.string().min(4) }).safeParse(req.body);
   if (!input.success) return res.status(400).json({ error: 'Department ID, Officer ID and password are required.' });
+  if (input.data.departmentId !== DEMO_CREDENTIALS.departmentId || input.data.officerId !== DEMO_CREDENTIALS.officerId || input.data.password !== DEMO_CREDENTIALS.password) return res.status(401).json({ error: 'The issued demo credentials were not recognized.' });
   const user = { id: input.data.officerId.toLowerCase(), name: 'A. Sharma', role: 'Senior Audit Officer', jurisdictions: ['MH-PWD', 'MH-HEALTH'], permissions: ['READ_MASKED', 'READ_BENCHMARK', 'READ_AUDIT', 'WRITE_EXECUTE', 'WRITE_UNMASK'] };
   const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: '8h', issuer: 'govspend-local-mvp' });
   appendAudit(user.id, 'AUTH_LOGIN', `USER-${user.id}`);
