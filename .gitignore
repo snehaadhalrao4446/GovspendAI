@@ -3,5 +3,6 @@ node_modules/
 dist/
 .env
 data/*.json
+!data/transactions.json
 uploads/
 coverage/

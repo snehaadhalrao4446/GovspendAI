@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node --watch server/index.js",
+    "generate:data": "node scripts/generate-dataset.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite preview --host 0.0.0.0",
