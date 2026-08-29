@@ -4,10 +4,11 @@ Government financial intelligence and audit-prioritisation console. This impleme
 
 ## What is implemented
 
-- React/Vite auditor console with the full seeded investigation journey.
-- Local Express API with signed JWT sessions, RBAC permission checks and jurisdiction scoping.
+- React/Vite auditor console whose overview, transactions, reconciliation, vendor intelligence and audit queue are loaded from API data.
+- Persistent synthetic transaction dataset in `data/transactions.json`, generated reproducibly with `pnpm generate:data`.
+- Local Express API with signed JWT sessions, RBAC permission checks, transaction ingestion and dynamic case derivation.
 - Deterministic weighted, confidence-gated risk scoring with versioned policy weights.
-- Masked case records, benchmark endpoint, vendor graph endpoint and grounded explanation contract.
+- Masked case records, vendor graph endpoint and grounded explanation contract.
 - Human case actions and maker-checker unmask request guardrail (self-approval is blocked).
 - Append-only hash-chained audit entries for logins, reads, explanations, actions and unmask requests.
 - Vercel-compatible serverless API entry at `api/[...path].js`.
@@ -18,7 +19,10 @@ Government financial intelligence and audit-prioritisation console. This impleme
 2. Install dependencies with `pnpm install`.
 3. In one terminal, run `pnpm dev:api`.
 4. In another terminal, run `pnpm dev`.
-5. Open `http://localhost:5173` and use the prefilled demo credentials.
+5. Open `http://localhost:5173` and use the issued demo credentials:
+   - Department ID: `PWD-MH-204`
+   - Officer ID: `AUD-ASH-204`
+   - Password: `GovSpend@2026`
 
 ## Verification
 
@@ -26,4 +30,4 @@ Run `pnpm build` for the frontend production build. The local API health endpoin
 
 ## Deployment note
 
-The Vercel deployment is suitable for the synthetic MVP data and local API logic. Before a real government deployment, replace the local secret and in-memory stores with OIDC/MFA, PostgreSQL/Redis, a KMS-backed isolated ledger, managed policy corpus, production logging, and independently reviewed network controls. No real PII should be entered into this MVP.
+The Vercel deployment is suitable for the synthetic MVP data and API logic. Vercel functions are stateless, so locally ingested records persist to the JSON dataset whereas a Vercel runtime resets memory between invocations. Before a real government deployment, replace the local secret and JSON data store with OIDC/MFA, PostgreSQL/Redis, a KMS-backed isolated ledger, managed policy corpus, production logging, and independently reviewed network controls. No real PII should be entered into this MVP.
