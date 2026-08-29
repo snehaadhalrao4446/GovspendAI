@@ -1,27 +1,29 @@
-# AI Tourism Intelligence & Heritage Management Platform
+# GovSpend Nexus AI — Local MVP
 
-PRD-aligned local prototype for the golden path: site QR/manual entry, tourist issue report, deterministic enrichment, and a protected government dashboard.
+Government financial intelligence and audit-prioritisation console. This implementation follows the supplied blueprint's core trust boundary: deterministic scoring and masked evidence first; grounded explanations and authorised human decisions second.
+
+## What is implemented
+
+- React/Vite auditor console with the full seeded investigation journey.
+- Local Express API with signed JWT sessions, RBAC permission checks and jurisdiction scoping.
+- Deterministic weighted, confidence-gated risk scoring with versioned policy weights.
+- Masked case records, benchmark endpoint, vendor graph endpoint and grounded explanation contract.
+- Human case actions and maker-checker unmask request guardrail (self-approval is blocked).
+- Append-only hash-chained audit entries for logins, reads, explanations, actions and unmask requests.
+- Vercel-compatible serverless API entry at `api/[...path].js`.
 
 ## Run locally
 
-1. Copy `.env.example` to `.env` and replace all secrets.
-2. Run `pnpm install`.
-3. In one terminal run `pnpm dev:api`; in another run `pnpm dev`.
-4. Open `http://localhost:5173`. The government login uses the credentials in `.env`.
+1. Copy `.env.example` to `.env` and set a strong `JWT_SECRET`.
+2. Install dependencies with `pnpm install`.
+3. In one terminal, run `pnpm dev:api`.
+4. In another terminal, run `pnpm dev`.
+5. Open `http://localhost:5173` and use the prefilled demo credentials.
 
-The API refuses to start with default secrets outside development. The sample data is intentionally synthetic. This starter uses in-memory data only; PostgreSQL, migrations, object storage, asynchronous jobs, and production deployment are planned next and are not represented as completed.
+## Verification
 
-## Security baseline in this starter
+Run `pnpm build` for the frontend production build. The local API health endpoint is available at `http://localhost:8787/api/health`.
 
-- JWT authentication and role checks for government routes
-- rate-limited login and report submission routes
-- request validation, payload limits, and image MIME/size limits
-- private, non-enumerated report identifiers
-- no production secret fallback
-- security headers and restricted CORS
+## Deployment note
 
-## Current scope
-
-Implemented: T18-style vertical slice and partial T40-T43 product shell.
-
-Not implemented: persistent storage, object-storage lifecycle, CV model execution, real location ingestion, WebSockets, RAG/LLM, approvals, and external action automation.
+The Vercel deployment is suitable for the synthetic MVP data and local API logic. Before a real government deployment, replace the local secret and in-memory stores with OIDC/MFA, PostgreSQL/Redis, a KMS-backed isolated ledger, managed policy corpus, production logging, and independently reviewed network controls. No real PII should be entered into this MVP.
