@@ -31,3 +31,13 @@ Run `pnpm build` for the frontend production build. The local API health endpoin
 ## Deployment note
 
 The Vercel deployment is suitable for the synthetic MVP data and API logic. Vercel functions are stateless, so locally ingested records persist to the JSON dataset whereas a Vercel runtime resets memory between invocations. Before a real government deployment, replace the local secret and JSON data store with OIDC/MFA, PostgreSQL/Redis, a KMS-backed isolated ledger, managed policy corpus, production logging, and independently reviewed network controls. No real PII should be entered into this MVP.
+
+## Groq AI explanation setup
+
+The API calls Groq only for the AI Auditor explanation. Deterministic scoring always runs first, and the model receives masked fields plus calculated evidence only. Its returned citations are checked against evidence IDs before display; if Groq is not configured or fails, the server returns the deterministic explanation instead.
+
+1. In the Groq console, revoke any key previously shared in chat and create a replacement key.
+2. Locally, put it in `.env` as `GROQ_API_KEY=...` and run `pnpm dev:api`.
+3. For Vercel, open **Project → Settings → Environment Variables**, add `GROQ_API_KEY` and `GROQ_MODEL=llama-3.3-70b-versatile` for Production, Preview and Development, then redeploy.
+
+Never put provider keys in source files, `.env.example`, browser code, or GitHub.

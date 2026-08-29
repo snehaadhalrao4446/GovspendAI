@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:api": "node --watch server/index.js",
+    "dev:api": "node --env-file=.env --watch server/index.js",
     "generate:data": "node scripts/generate-dataset.mjs",
     "build": "vite build",
     "preview": "vite preview",
