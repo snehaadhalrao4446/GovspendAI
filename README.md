@@ -19,10 +19,7 @@ Government financial intelligence and audit-prioritisation console. This impleme
 2. Install dependencies with `pnpm install`.
 3. In one terminal, run `pnpm dev:api`.
 4. In another terminal, run `pnpm dev`.
-5. Open `http://localhost:5173` and use the issued demo credentials:
-   - Department ID: `PWD-MH-204`
-   - Officer ID: `AUD-ASH-204`
-   - Password: `GovSpend@2026`
+5. Set `AUTH_DEPARTMENT_ID`, `AUTH_OFFICER_ID` and a strong `AUTH_PASSWORD` in `.env`, then open `http://localhost:5173` and sign in with those values.
 
 ## Verification
 
@@ -30,7 +27,7 @@ Run `pnpm build` for the frontend production build. The local API health endpoin
 
 ## Deployment note
 
-The Vercel deployment is suitable for the synthetic MVP data and API logic. Vercel functions are stateless, so locally ingested records persist to the JSON dataset whereas a Vercel runtime resets memory between invocations. Before a real government deployment, replace the local secret and JSON data store with OIDC/MFA, PostgreSQL/Redis, a KMS-backed isolated ledger, managed policy corpus, production logging, and independently reviewed network controls. No real PII should be entered into this MVP.
+The Vercel deployment is suitable for synthetic MVP data and API logic only. Add `JWT_SECRET`, `AUTH_DEPARTMENT_ID`, `AUTH_OFFICER_ID`, `AUTH_PASSWORD` and `ALLOWED_ORIGIN` in Vercel Project Settings → Environment Variables before signing in. Vercel functions are stateless, so locally ingested records persist to the JSON dataset whereas a Vercel runtime resets memory between invocations. Before a real government deployment, replace the single test login and JSON data store with OIDC/MFA, PostgreSQL/Redis, a KMS-backed isolated ledger, managed policy corpus, production logging, and independently reviewed network controls. No real PII should be entered into this MVP.
 
 ## Groq AI explanation setup
 

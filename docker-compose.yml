@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: govspend
       POSTGRES_USER: govspend
-      POSTGRES_PASSWORD: change-me-before-use
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}
     ports:
       - "5432:5432"
     healthcheck:

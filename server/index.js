@@ -6,6 +6,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 
 if (existsSync(path.resolve(process.cwd(), '.env'))) {
@@ -17,11 +18,12 @@ if (existsSync(path.resolve(process.cwd(), '.env'))) {
 
 const app = express();
 const PORT = Number(process.env.PORT || 8787);
-const SECRET = process.env.JWT_SECRET || 'change-this-local-development-secret-before-deploying';
+const SECRET = process.env.JWT_SECRET;
 const DATA_FILE = path.resolve(process.cwd(), 'data/transactions.json');
 const ACTION_FILE = path.resolve(process.cwd(), 'data/case-actions.json');
 const WEIGHTS = { price_deviation: .30, duplicate_similarity: .20, vendor_concentration: .20, purchase_pattern: .15, timing_anomaly: .10, approval_velocity: .05 };
-const credentials = { departmentId: process.env.DEMO_DEPARTMENT_ID || 'PWD-MH-204', officerId: process.env.DEMO_OFFICER_ID || 'AUD-ASH-204', password: process.env.DEMO_PASSWORD || 'GovSpend@2026' };
+const credentials = { departmentId: process.env.AUTH_DEPARTMENT_ID, officerId: process.env.AUTH_OFFICER_ID, password: process.env.AUTH_PASSWORD };
+const authenticationConfigured = Boolean(SECRET && SECRET.length >= 32 && Object.values(credentials).every(Boolean));
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 let transactions = [];
@@ -71,9 +73,10 @@ const groqExplanation = async (tx, item, active) => {
   } catch { return fallback; }
 };
 
-app.disable('x-powered-by'); app.use(helmet({crossOriginResourcePolicy:false})); app.use(cors()); app.use(express.json({limit:'250kb'}));
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || 'http://localhost:5173').split(',').map(value=>value.trim()).filter(Boolean);
+app.disable('x-powered-by'); app.use(helmet({crossOriginResourcePolicy:false})); app.use(cors({origin:(origin,callback)=>callback(null,!origin||allowedOrigins.includes(origin))})); app.use(express.json({limit:'250kb'}));
 app.get('/api/health', (_req,res)=>res.json({status:'ok', transactions:transactions.length, timestamp:new Date().toISOString()}));
-app.post('/api/auth/login',(req,res)=>{const input=z.object({departmentId:z.string(),officerId:z.string(),password:z.string()}).safeParse(req.body);if(!input.success||Object.keys(credentials).some(key=>input.data?.[key]!==credentials[key]))return res.status(401).json({error:'The issued demo credentials were not recognised.'});const user={id:credentials.officerId.toLowerCase(),name:'A. Sharma',role:'Senior Audit Officer',permissions:['READ_MASKED','READ_BENCHMARK','READ_AUDIT','WRITE_EXECUTE','WRITE_UNMASK']};record(user.id,'AUTH_LOGIN',`USER-${user.id}`);res.json({accessToken:jwt.sign(user,SECRET,{expiresIn:'8h'}),user})});
+app.post('/api/auth/login',rateLimit({windowMs:15*60*1000,max:10,standardHeaders:true,legacyHeaders:false}),(req,res)=>{if(!authenticationConfigured)return res.status(503).json({error:'Authentication is not configured. Set JWT_SECRET, AUTH_DEPARTMENT_ID, AUTH_OFFICER_ID and AUTH_PASSWORD in the deployment environment.'});const input=z.object({departmentId:z.string().min(1).max(80),officerId:z.string().min(1).max(80),password:z.string().min(12).max(256)}).safeParse(req.body);if(!input.success||Object.keys(credentials).some(key=>input.data?.[key]!==credentials[key]))return res.status(401).json({error:'The supplied credentials were not recognised.'});const user={id:credentials.officerId.toLowerCase(),name:'Authorized Audit Officer',role:'Senior Audit Officer',permissions:['READ_MASKED','READ_BENCHMARK','READ_AUDIT','WRITE_EXECUTE','WRITE_UNMASK']};record(user.id,'AUTH_LOGIN',`USER-${user.id}`);res.json({accessToken:jwt.sign(user,SECRET,{expiresIn:'8h'}),user})});
 app.get('/api/dashboard',requireAuth,permit('READ_MASKED'),(req,res)=>{const evaluated=transactions.map(evaluate);const cases=evaluated.filter(item=>item.risk.tier!=='LOW');record(req.user.id,'READ_DASHBOARD','DASHBOARD');res.json({data:{transactionsAnalysed:transactions.length,totalExpenditure:transactions.reduce((sum,tx)=>sum+money(tx.amount),0),casesRequiringReview:cases.length,reconciliationExceptions:transactions.filter(tx=>money(tx.paymentAmount)!==money(tx.invoiceAmount)).length,priorityDistribution:['LOW','BORDERLINE','HIGH'].map(tier=>({tier,count:evaluated.filter(item=>item.risk.tier===tier).length})),departmentSpending:Object.entries(transactions.reduce((all,tx)=>{all[tx.department]=(all[tx.department]||0)+money(tx.amount);return all},{})).map(([department,total])=>({department,total})).sort((a,b)=>b.total-a.total)}})});
 app.get('/api/transactions',requireAuth,permit('READ_MASKED'),(req,res)=>{const q=(req.query.q||'').toString().toLowerCase();const data=transactions.filter(tx=>!q||[tx.id,tx.invoice,tx.vendor,tx.department].join(' ').toLowerCase().includes(q)).map(evaluate).sort((a,b)=>b.risk.priority-a.risk.priority);record(req.user.id,'READ_TRANSACTIONS','TRANSACTION_LIST',{count:data.length});res.json({data,total:data.length})});
 app.post('/api/transactions',requireAuth,permit('WRITE_EXECUTE'),async(req,res)=>{const parsed=z.object({invoice:z.string(),contract:z.string(),date:z.string(),department:z.string(),vendor:z.string(),category:z.string(),region:z.string(),amount:z.number().positive(),invoiceAmount:z.number().positive(),paymentAmount:z.number().positive(),unitPrice:z.number().positive(),quantity:z.number().positive(),approvalHours:z.number().nonnegative()}).safeParse(req.body);if(!parsed.success)return res.status(400).json({error:'Complete canonical transaction fields are required.'});const id=`TX${String(10000+transactions.length+1)}`;const tx={id,...parsed.data,referenceGroup:`REF-${id}`};transactions.push(tx);let persisted=true;try{await writeFile(DATA_FILE,JSON.stringify({generatedAt:new Date().toISOString(),transactions},null,2))}catch{persisted=false}record(req.user.id,'INGEST_TRANSACTION',id,{persisted});res.status(201).json({data:{...caseFor(tx),persisted}})});
