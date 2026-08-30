@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
-    { "source": "/secure-gateway/auth/login", "destination": "/api/auth/login" },
+    { "source": "/secure-gateway", "destination": "/api/health" },
     { "source": "/secure-gateway/(.*)", "destination": "/api/$1" }
   ]
 }
