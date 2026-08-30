@@ -5,7 +5,7 @@ Government financial intelligence and audit-prioritisation console. This impleme
 ## What is implemented
 
 - React/Vite auditor console whose overview, transactions, reconciliation, vendor intelligence and audit queue are loaded from API data.
-- Persistent synthetic transaction dataset in `data/transactions.json`, generated reproducibly with `pnpm generate:data`.
+- Persistent 150-record fictional transaction dataset in `data/transactions.json`, generated reproducibly with `pnpm generate:data`.
 - Local Express API with signed JWT sessions, RBAC permission checks, transaction ingestion and dynamic case derivation.
 - Deterministic weighted, confidence-gated risk scoring with versioned policy weights.
 - Masked case records, vendor graph endpoint and grounded explanation contract.

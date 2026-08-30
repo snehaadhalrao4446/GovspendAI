@@ -21,8 +21,10 @@ const categories = [
   ['Training services', 9000, 34000], ['Electrical materials', 6500, 42000], ['Facility management', 18000, 58000],
 ];
 const countArgument = process.argv.find(value => value.startsWith('--count='));
-const requestedCount = Number(countArgument?.slice('--count='.length) || process.env.DATASET_SIZE || 5000);
-const rowCount = Number.isInteger(requestedCount) && requestedCount >= 100 ? requestedCount : 5000;
+const requestedCount = Number(countArgument?.slice('--count='.length) || process.env.DATASET_SIZE || 150);
+const totalCount = Number.isInteger(requestedCount) && requestedCount >= 100 ? requestedCount : 150;
+const fixedScenarioCount = 2;
+const rowCount = totalCount - fixedScenarioCount;
 let seed = 20260829;
 const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const integer = (min, max) => Math.floor(random() * (max - min + 1)) + min;
@@ -36,8 +38,8 @@ for (let index = 1; index <= rowCount; index += 1) {
   const quantity = integer(4, 70);
   const unitPrice = integer(lowUnitPrice, highUnitPrice);
   const amount = Math.round(unitPrice * quantity);
-  const paymentMismatch = index % 173 === 0;
-  const duplicatePattern = index % 211 === 0;
+  const paymentMismatch = index % 47 === 0;
+  const duplicatePattern = index % 59 === 0;
   rows.push({
     id: `TX${String(20000 + index).padStart(5, '0')}`,
     invoice: `INV-${region}-${String(850000 + index).padStart(6, '0')}`,
